@@ -1,29 +1,29 @@
-name: Notion Sync
-
+name: GH to Notion
 on:
-  workflow_dispatch:
-  issues:
-    types:
-      [
-        opened,
-        edited,
-        labeled,
-        unlabeled,
-        assigned,
-        unassigned,
-        milestoned,
-        demilestoned,
-        reopened,
-        closed,
-      ]
+  push:
+    branches:
+      - main
+      - feature/**
+      - bugfix/**
+      - hotfix/**
+  pull_request:
+    types: [opened, reopened, closed]
 
 jobs:
-  notion_job:
+  build:
     runs-on: ubuntu-latest
-    name: Add GitHub Issues to Notion
     steps:
-      - name: Add GitHub Issues to Notion
-        uses: tryfabric/notion-github-action@v1
+      - uses: actions/checkout@v2
+      - name: GH to Notion
+        uses: jlcaraballo/gh-notion@v1.0.3
+        env:
+          NOTION_STATUS: |
+            TODO=Not Started
+            PROGRESS=In Progress
+            DONE=Done
+            REVIEW=In review
+            MERGED=Staged
         with:
-          notion-token: ${{ secrets.NOTION_TOKEN }}
-          notion-db: ${{ secrets.NOTION_DATABASE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NOTION_SECRET: ${{ secrets.NOTION_SECRET }}
+          NOTION_DATABASE: ${{ secrets.NOTION_DATABASE }}
