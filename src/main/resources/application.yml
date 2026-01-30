@@ -1,45 +1,45 @@
-spring:
-  application:
-    name: unveil-backend
-  
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:unveil}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-  
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-  
-server:
-  port: 8080
-  servlet:
-    context-path: /api
-
-# AWS S3 Configuration
-aws:
-  s3:
-    bucket-name: ${AWS_S3_BUCKET:unveil-favorites}
-    region: ${AWS_REGION:us-east-1}
-    access-key: ${AWS_ACCESS_KEY:}
-    secret-key: ${AWS_SECRET_KEY:}
-
-# External Art APIs
-art:
-  apis:
-    met:
-      base-url: https://collectionapi.metmuseum.org/public/collection/v1
-    chicago:
-      base-url: https://api.artic.edu/api/v1
-    rijksmuseum:
-      base-url: https://www.rijksmuseum.nl/api/en/collection
-      api-key: ${RIJKSMUSEUM_API_KEY:}
-    harvard:
-      base-url: https://api.harvardartmuseums.org
-      api-key: ${HARVARD_API_KEY:}
+#spring:
+#  application:
+#    name: unveil-backend
+#
+#  datasource:
+#    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:unveil}
+#    username: ${DB_USERNAME:postgres}
+#    password: ${DB_PASSWORD:postgres}
+#    driver-class-name: org.postgresql.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.PostgreSQLDialect
+#        format_sql: true
+#
+#server:
+#  port: 8080
+#  servlet:
+#    context-path: /api
+#
+## AWS S3 Configuration
+#aws:
+#  s3:
+#    bucket-name: ${AWS_S3_BUCKET:unveil-favorites}
+#    region: ${AWS_REGION:us-east-1}
+#    access-key: ${AWS_ACCESS_KEY:}
+#    secret-key: ${AWS_SECRET_KEY:}
+#
+## External Art APIs
+#art:
+#  apis:
+#    met:
+#      base-url: https://collectionapi.metmuseum.org/public/collection/v1
+#    chicago:
+#      base-url: https://api.artic.edu/api/v1
+#    rijksmuseum:
+#      base-url: https://www.rijksmuseum.nl/api/en/collection
+#      api-key: ${RIJKSMUSEUM_API_KEY:}
+#    harvard:
+#      base-url: https://api.harvardartmuseums.org
+#      api-key: ${HARVARD_API_KEY:}
