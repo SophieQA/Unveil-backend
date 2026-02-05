@@ -66,13 +66,19 @@ public class MetMuseumService {
                     log.info("Found valid Open Access artwork: {} (ID: {})",
                             objectResponse.getTitle(), objectResponse.getObjectID());
 
+                    // Use primaryImageSmall for faster loading, fallback to primaryImage if not available
+                    String imageUrl = (objectResponse.getPrimaryImageSmall() != null &&
+                                      !objectResponse.getPrimaryImageSmall().isEmpty())
+                                      ? objectResponse.getPrimaryImageSmall()
+                                      : objectResponse.getPrimaryImage();
+
                     // Step 5: Convert to ArtworkDto
                     return ArtworkDto.builder()
                             .artworkId("met-" + objectResponse.getObjectID())
                             .title(objectResponse.getTitle())
                             .artist(objectResponse.getArtistDisplayName() != null ?
                                     objectResponse.getArtistDisplayName() : "Unknown Artist")
-                            .imageUrl(objectResponse.getPrimaryImage())
+                            .imageUrl(imageUrl)
                             .museumSource("The Metropolitan Museum of Art")
                             .objectDate(objectResponse.getObjectDate())
                             .medium(objectResponse.getMedium())
@@ -106,6 +112,7 @@ public class MetMuseumService {
         private String title;
         private String artistDisplayName;
         private String primaryImage;
+        private String primaryImageSmall;
         private Boolean isPublicDomain;
         private String objectDate;
         private String medium;
