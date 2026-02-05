@@ -45,3 +45,17 @@ build/
 
 # Environments
 .env
+
+# Log files
+*.log
+logs/
+server.log
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
+
