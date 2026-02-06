@@ -31,6 +31,10 @@ public class Favorite {
     @Column(name = "artwork_id", nullable = false, length = 100)
     private String artworkId;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "artwork_id", referencedColumnName = "artwork_id", insertable = false, updatable = false)
+    private Artwork artwork;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
