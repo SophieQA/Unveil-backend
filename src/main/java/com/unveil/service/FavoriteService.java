@@ -1,7 +1,9 @@
 package com.unveil.service;
 
+import com.unveil.dto.ArtworkArchiveDto;
 import com.unveil.dto.FavoriteDto;
 import com.unveil.dto.FavoritesResponse;
+import com.unveil.dto.FavoriteWithArtworkDto;
 import com.unveil.model.Favorite;
 import com.unveil.repository.FavoriteRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +51,7 @@ public class FavoriteService {
     }
 
     /**
-     * Get all favorites for a user
+     * Get all favorites for a user with artwork information
      */
     public FavoritesResponse getFavorites(String userId, Integer page, Integer limit) {
         int pageNum = page != null && page > 0 ? page - 1 : 0;
@@ -60,8 +62,8 @@ public class FavoriteService {
 
         log.info("Fetching favorites for user: {}, page: {}, limit: {}", userId, pageNum + 1, pageSize);
 
-        List<FavoriteDto> favorites = favoritePage.getContent().stream()
-                .map(this::toFavoriteDto)
+        List<FavoriteWithArtworkDto> favorites = favoritePage.getContent().stream()
+                .map(this::toFavoriteWithArtworkDto)
                 .collect(Collectors.toList());
 
         return FavoritesResponse.builder()
@@ -102,6 +104,31 @@ public class FavoriteService {
                 .userId(favorite.getUserId())
                 .artworkId(favorite.getArtworkId())
                 .createdAt(favorite.getCreatedAt())
+                .build();
+    }
+
+    private FavoriteWithArtworkDto toFavoriteWithArtworkDto(Favorite favorite) {
+        ArtworkArchiveDto artworkDto = null;
+        if (favorite.getArtwork() != null) {
+            artworkDto = ArtworkArchiveDto.builder()
+                    .id(favorite.getArtwork().getId())
+                    .artworkId(favorite.getArtwork().getArtworkId())
+                    .title(favorite.getArtwork().getTitle())
+                    .artist(favorite.getArtwork().getArtist())
+                    .imageUrl(favorite.getArtwork().getImageUrl())
+                    .museumSource(favorite.getArtwork().getMuseumSource())
+                    .year(favorite.getArtwork().getYear())
+                    .description(favorite.getArtwork().getDescription())
+                    .createdAt(favorite.getArtwork().getCreatedAt())
+                    .build();
+        }
+
+        return FavoriteWithArtworkDto.builder()
+                .id(favorite.getId())
+                .userId(favorite.getUserId())
+                .artworkId(favorite.getArtworkId())
+                .createdAt(favorite.getCreatedAt())
+                .artwork(artworkDto)
                 .build();
     }
 }

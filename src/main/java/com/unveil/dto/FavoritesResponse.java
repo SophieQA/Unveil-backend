@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class FavoritesResponse {
 
-    private List<FavoriteDto> favorites;
+    private List<FavoriteWithArtworkDto> favorites;
     private Integer totalCount;
     private Integer currentPage;
     private Integer pageSize;
