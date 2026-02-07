@@ -4,7 +4,9 @@ import com.unveil.dto.ArtworkArchiveDto;
 import com.unveil.dto.FavoriteDto;
 import com.unveil.dto.FavoritesResponse;
 import com.unveil.dto.FavoriteWithArtworkDto;
+import com.unveil.model.ArtworkView;
 import com.unveil.model.Favorite;
+import com.unveil.repository.ArtworkViewRepository;
 import com.unveil.repository.FavoriteRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,9 +23,11 @@ import java.util.stream.Collectors;
 public class FavoriteService {
 
     private final FavoriteRepository favoriteRepository;
+    private final ArtworkViewRepository artworkViewRepository;
 
-    public FavoriteService(FavoriteRepository favoriteRepository) {
+    public FavoriteService(FavoriteRepository favoriteRepository, ArtworkViewRepository artworkViewRepository) {
         this.favoriteRepository = favoriteRepository;
+        this.artworkViewRepository = artworkViewRepository;
     }
 
     /**
@@ -63,7 +67,7 @@ public class FavoriteService {
         log.info("Fetching favorites for user: {}, page: {}, limit: {}", userId, pageNum + 1, pageSize);
 
         List<FavoriteWithArtworkDto> favorites = favoritePage.getContent().stream()
-                .map(this::toFavoriteWithArtworkDto)
+                .map(favorite -> toFavoriteWithArtworkDto(favorite, userId))
                 .collect(Collectors.toList());
 
         return FavoritesResponse.builder()
@@ -107,19 +111,23 @@ public class FavoriteService {
                 .build();
     }
 
-    private FavoriteWithArtworkDto toFavoriteWithArtworkDto(Favorite favorite) {
+    private FavoriteWithArtworkDto toFavoriteWithArtworkDto(Favorite favorite, String userId) {
         ArtworkArchiveDto artworkDto = null;
-        if (favorite.getArtwork() != null) {
+        ArtworkView view = artworkViewRepository.findTopByUserIdAndArtworkIdOrderByCreatedAtDesc(
+                userId,
+                favorite.getArtworkId()
+        );
+
+        if (view != null) {
             artworkDto = ArtworkArchiveDto.builder()
-                    .id(favorite.getArtwork().getId())
-                    .artworkId(favorite.getArtwork().getArtworkId())
-                    .title(favorite.getArtwork().getTitle())
-                    .artist(favorite.getArtwork().getArtist())
-                    .imageUrl(favorite.getArtwork().getImageUrl())
-                    .museumSource(favorite.getArtwork().getMuseumSource())
-                    .year(favorite.getArtwork().getYear())
-                    .description(favorite.getArtwork().getDescription())
-                    .createdAt(favorite.getArtwork().getCreatedAt())
+                    .artworkId(view.getArtworkId())
+                    .title(view.getTitle())
+                    .artist(view.getArtist())
+                    .imageUrl(view.getImageUrl())
+                    .museumSource(view.getMuseumSource())
+                    .year(view.getObjectDate())
+                    .description(view.getMedium())
+                    .createdAt(view.getCreatedAt())
                     .build();
         }
 

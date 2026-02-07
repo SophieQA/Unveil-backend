@@ -1,6 +1,7 @@
 package com.unveil.controller;
 
 import com.unveil.dto.ArtworkDto;
+import com.unveil.dto.ArtworkDetailDto;
 import com.unveil.dto.ArtworkHistoryResponse;
 import com.unveil.dto.ViewRequest;
 import com.unveil.service.ArtworkService;
@@ -85,6 +86,29 @@ public class ArtworkController {
             return ResponseEntity.ok(history);
         } catch (Exception e) {
             log.error("Error fetching history for user {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * GET /api/artworks/details?userId=&artworkId=
+     * Get artwork detail for a user from viewing history
+     */
+    @GetMapping("/details")
+    public ResponseEntity<ArtworkDetailDto> getArtworkDetail(
+            @RequestParam String userId,
+            @RequestParam String artworkId) {
+
+        log.info("Request received: GET /api/artworks/details for user: {}, artwork: {}", userId, artworkId);
+
+        try {
+            ArtworkDetailDto detail = artworkService.getArtworkDetail(userId, artworkId);
+            if (detail == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(detail);
+        } catch (Exception e) {
+            log.error("Error fetching artwork detail for user {}: {}", userId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
