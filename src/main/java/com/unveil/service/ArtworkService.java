@@ -1,7 +1,6 @@
 package com.unveil.service;
 
 import com.unveil.config.MuseumApiConfig;
-import com.unveil.dto.ArtworkDetailDto;
 import com.unveil.dto.ArtworkDto;
 import com.unveil.dto.ArtworkHistoryResponse;
 import com.unveil.dto.ViewRequest;
@@ -126,29 +125,6 @@ public class ArtworkService {
         return ArtworkHistoryResponse.builder()
                 .items(items)
                 .totalCount((int) totalCount)
-                .build();
-    }
-
-    /**
-     * Get artwork detail from viewing history for a user and artwork
-     */
-    public ArtworkDetailDto getArtworkDetail(String userId, String artworkId) {
-        ArtworkView view = viewRepository.findTopByUserIdAndArtworkIdOrderByCreatedAtDesc(userId, artworkId);
-        if (view == null) {
-            return null;
-        }
-
-        return ArtworkDetailDto.builder()
-                .artworkId(view.getArtworkId())
-                .title(view.getTitle())
-                .artist(view.getArtist())
-                .imageUrl(view.getImageUrl())
-                .museumSource(view.getMuseumSource())
-                .objectDate(view.getObjectDate())
-                .medium(view.getMedium())
-                .dimensions(view.getDimensions())
-                .creditLine(view.getCreditLine())
-                .viewedAt(view.getCreatedAt())
                 .build();
     }
 

@@ -33,9 +33,5 @@ public interface ArtworkViewRepository extends JpaRepository<ArtworkView, Long> 
      */
     @Query("SELECT av FROM ArtworkView av WHERE av.userId = :userId ORDER BY av.createdAt DESC")
     List<ArtworkView> findRecentViewsByUserId(@Param("userId") String userId, Pageable pageable);
-
-    /**
-     * Get the most recent view for a user and artwork
-     */
-    ArtworkView findTopByUserIdAndArtworkIdOrderByCreatedAtDesc(String userId, String artworkId);
 }
+
