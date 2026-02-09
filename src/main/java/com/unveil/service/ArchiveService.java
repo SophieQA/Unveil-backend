@@ -1,9 +1,14 @@
 package com.unveil.service;
 
 import com.unveil.dto.ArchiveResponse;
+import com.unveil.dto.ArchiveViewResponse;
 import com.unveil.dto.ArtworkArchiveDto;
+import com.unveil.dto.ArtworkArchiveViewDto;
 import com.unveil.model.Artwork;
+import com.unveil.model.ArtworkView;
 import com.unveil.repository.ArtworkRepository;
+import com.unveil.repository.ArtworkViewRepository;
+import com.unveil.repository.FavoriteRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,9 +23,46 @@ import java.util.stream.Collectors;
 public class ArchiveService {
 
     private final ArtworkRepository artworkRepository;
+    private final ArtworkViewRepository artworkViewRepository;
+    private final FavoriteRepository favoriteRepository;
 
-    public ArchiveService(ArtworkRepository artworkRepository) {
+    public ArchiveService(
+            ArtworkRepository artworkRepository,
+            ArtworkViewRepository artworkViewRepository,
+            FavoriteRepository favoriteRepository) {
         this.artworkRepository = artworkRepository;
+        this.artworkViewRepository = artworkViewRepository;
+        this.favoriteRepository = favoriteRepository;
+    }
+
+    /**
+     * Get user's artwork archive (viewing history) with favorite status
+     * Returns unique artworks with pagination
+     */
+    public ArchiveViewResponse getArchive(String userId, Integer page, Integer limit) {
+        int pageNum = page != null && page > 0 ? page - 1 : 0;
+        int pageSize = limit != null && limit > 0 ? Math.min(limit, 100) : 50;
+
+        Pageable pageable = PageRequest.of(pageNum, pageSize);
+
+        log.info("Fetching archive for user: {}, page: {}, limit: {}", userId, pageNum + 1, pageSize);
+
+        // Get user's viewing history
+        List<ArtworkView> views = artworkViewRepository.findRecentViewsByUserId(userId, pageable);
+        long totalCount = artworkViewRepository.countByUserId(userId);
+
+        // Convert to DTOs with favorite status
+        List<ArtworkArchiveViewDto> artworks = views.stream()
+            .map(view -> toArchiveViewDto(view, userId))
+            .collect(Collectors.toList());
+
+        return ArchiveViewResponse.builder()
+            .artworks(artworks)
+            .totalCount((int) totalCount)
+            .currentPage(pageNum + 1)
+            .pageSize(pageSize)
+            .totalPages((int) Math.ceil((double) totalCount / pageSize))
+            .build();
     }
 
     /**
@@ -79,6 +121,35 @@ public class ArchiveService {
 
         Artwork saved = artworkRepository.save(artwork);
         return toArtworkArchiveDto(saved);
+    }
+
+    /**
+     * Convert ArtworkView to ArchiveViewDto with favorite status
+     */
+    private ArtworkArchiveViewDto toArchiveViewDto(ArtworkView view, String userId) {
+        // Check if this artwork is favorited
+        boolean isFavorited = favoriteRepository.existsByUserIdAndArtworkId(userId, view.getArtworkId());
+
+        // Get artwork details from the joined Artwork entity
+        String title = view.getArtwork() != null ? view.getArtwork().getTitle() : "Unknown";
+        String artist = view.getArtwork() != null ? view.getArtwork().getArtist() : "Unknown";
+        String imageUrl = view.getArtwork() != null ? view.getArtwork().getImageUrl() : null;
+        String museumSource = view.getArtwork() != null ? view.getArtwork().getMuseumSource() : null;
+        String year = view.getArtwork() != null ? view.getArtwork().getYear() : null;
+        String description = view.getArtwork() != null ? view.getArtwork().getDescription() : null;
+
+        return ArtworkArchiveViewDto.builder()
+            .id(view.getId())
+            .artworkId(view.getArtworkId())
+            .title(title)
+            .artist(artist)
+            .imageUrl(imageUrl)
+            .museumSource(museumSource)
+            .year(year)
+            .description(description)
+            .viewedAt(view.getCreatedAt())
+            .isFavorited(isFavorited)
+            .build();
     }
 
     private ArtworkArchiveDto toArtworkArchiveDto(Artwork artwork) {
