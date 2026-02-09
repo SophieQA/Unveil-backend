@@ -15,9 +15,9 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "artworks", indexes = {
-    @Index(name = "idx_artwork_id", columnList = "artworkId"),
-    @Index(name = "idx_created_at", columnList = "createdAt"),
-    @Index(name = "idx_title", columnList = "title")
+    @Index(name = "idx_artwork_id_col", columnList = "artworkId"),
+    @Index(name = "idx_artwork_created_at", columnList = "createdAt"),
+    @Index(name = "idx_artwork_title", columnList = "title")
 })
 public class Artwork {
 
