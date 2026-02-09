@@ -2,7 +2,6 @@ package com.unveil.controller;
 
 import com.unveil.dto.ArtworkDto;
 import com.unveil.dto.ArtworkHistoryResponse;
-import com.unveil.dto.ViewRequest;
 import com.unveil.service.ArtworkService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -30,11 +29,19 @@ public class ArtworkController {
      * @return Random artwork data
      */
     @GetMapping("/random")
-    public ResponseEntity<ArtworkDto> getRandomArtwork() {
-        log.info("Request received: GET /api/artworks/random");
+    public ResponseEntity<ArtworkDto> getRandomArtwork(
+            @RequestParam(required = false) String userId) {
+        log.info("Request received: GET /api/artworks/random, userId: {}", userId);
 
         try {
-            ArtworkDto artwork = artworkService.getRandomArtwork();
+            ArtworkDto artwork;
+            if (userId != null && !userId.trim().isEmpty()) {
+                // Get unseen artwork for the user
+                artwork = artworkService.getRandomArtworkForUser(userId);
+            } else {
+                // Get any random artwork (no duplicate check)
+                artwork = artworkService.getRandomArtwork();
+            }
             return ResponseEntity.ok(artwork);
         } catch (Exception e) {
             log.error("Error fetching random artwork: {}", e.getMessage(), e);
@@ -42,28 +49,6 @@ public class ArtworkController {
         }
     }
 
-    /**
-     * POST /api/artworks/view
-     * Record that a user viewed an artwork (asynchronous)
-     * This endpoint returns immediately and processes the recording in the background
-     *
-     * @param userId User identifier (from header or default to "anonymous")
-     * @param viewRequest Artwork details to record
-     * @return 202 Accepted status
-     */
-    @PostMapping("/view")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public ResponseEntity<Void> recordView(
-            @RequestHeader(value = "X-User-Id", required = false, defaultValue = "anonymous") String userId,
-            @RequestBody ViewRequest viewRequest) {
-
-        log.info("Request received: POST /api/artworks/view for user: {}", userId);
-
-        // Async processing - returns immediately
-        artworkService.recordViewAsync(userId, viewRequest);
-
-        return ResponseEntity.accepted().build();
-    }
 
     /**
      * GET /api/artworks/history
