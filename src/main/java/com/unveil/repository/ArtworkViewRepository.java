@@ -29,6 +29,11 @@ public interface ArtworkViewRepository extends JpaRepository<ArtworkView, Long> 
     long countByUserId(String userId);
 
     /**
+     * Check if user has viewed a specific artwork
+     */
+    boolean existsByUserIdAndArtworkId(String userId, String artworkId);
+
+    /**
      * Get the most recently viewed artworks for a user
      */
     @Query("SELECT av FROM ArtworkView av WHERE av.userId = :userId ORDER BY av.createdAt DESC")
