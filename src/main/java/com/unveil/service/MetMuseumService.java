@@ -73,6 +73,25 @@ public class MetMuseumService {
                                       : objectResponse.getPrimaryImage();
 
                     // Step 5: Convert to ArtworkDto
+                    // Extract year from objectDate (e.g., "1700-1750" -> "1700")
+                    String year = null;
+                    if (objectResponse.getObjectDate() != null && !objectResponse.getObjectDate().isEmpty()) {
+                        // Extract the first 4-digit number from objectDate
+                        String[] parts = objectResponse.getObjectDate().split("[^0-9]+");
+                        if (parts.length > 0 && parts[0].length() == 4) {
+                            year = parts[0];
+                        }
+                    }
+
+                    // Description: Use medium + dimensions if available, otherwise use a placeholder
+                    String description = null;
+                    if (objectResponse.getMedium() != null && !objectResponse.getMedium().isEmpty()) {
+                        description = objectResponse.getMedium();
+                        if (objectResponse.getDimensions() != null && !objectResponse.getDimensions().isEmpty()) {
+                            description += " | " + objectResponse.getDimensions();
+                        }
+                    }
+
                     return ArtworkDto.builder()
                             .artworkId("met-" + objectResponse.getObjectID())
                             .title(objectResponse.getTitle())
@@ -80,6 +99,8 @@ public class MetMuseumService {
                                     objectResponse.getArtistDisplayName() : "Unknown Artist")
                             .imageUrl(imageUrl)
                             .museumSource("The Metropolitan Museum of Art")
+                            .year(year)
+                            .description(description)
                             .objectDate(objectResponse.getObjectDate())
                             .medium(objectResponse.getMedium())
                             .dimensions(objectResponse.getDimensions())
