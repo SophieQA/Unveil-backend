@@ -1,6 +1,7 @@
 package com.unveil.controller;
 
 import com.unveil.dto.ArchiveResponse;
+import com.unveil.dto.ArchiveViewResponse;
 import com.unveil.service.ArchiveService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,33 @@ public class ArchiveController {
             return ResponseEntity.ok(archive);
         } catch (Exception e) {
             log.error("Error searching archive: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * GET /api/artworks/archive/user/{userId}?page=&limit=
+     * Get user's artwork archive (viewing history) with favorite status
+     *
+     * @param userId User identifier
+     * @param page Page number (1-indexed, default: 1)
+     * @param limit Items per page (default: 50, max: 100)
+     * @return Archive view response with favorite status
+     */
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ArchiveViewResponse> getUserArchive(
+            @PathVariable String userId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer limit) {
+
+        log.info("Request received: GET /api/artworks/archive/user/{} with page: {}, limit: {}",
+                userId, page, limit);
+
+        try {
+            ArchiveViewResponse archive = archiveService.getArchive(userId, page, limit);
+            return ResponseEntity.ok(archive);
+        } catch (Exception e) {
+            log.error("Error fetching user archive for {}: {}", userId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
