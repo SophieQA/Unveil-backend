@@ -16,6 +16,8 @@ public class ArtworkDto {
     private String artist;
     private String imageUrl;
     private String museumSource;
+    private String year;
+    private String description;
     private String objectDate;
     private String medium;
     private String dimensions;
