@@ -3,13 +3,13 @@ package com.unveil.service;
 import com.unveil.config.MuseumApiConfig;
 import com.unveil.dto.ArtworkDto;
 import com.unveil.dto.ArtworkHistoryResponse;
-import com.unveil.dto.ViewRequest;
+import com.unveil.model.Artwork;
 import com.unveil.model.ArtworkView;
+import com.unveil.repository.ArtworkRepository;
 import com.unveil.repository.ArtworkViewRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class ArtworkService {
 
     private final MuseumApiConfig museumConfig;
+    private final ArtworkRepository artworkRepository;
     private final ArtworkViewRepository viewRepository;
     private final RestTemplate restTemplate;
     private final Random random = new Random();
@@ -35,17 +36,74 @@ public class ArtworkService {
 
     public ArtworkService(
             MuseumApiConfig museumConfig,
+            ArtworkRepository artworkRepository,
             ArtworkViewRepository viewRepository,
             RestTemplate restTemplate,
             MetMuseumService metMuseumService,
             ChicagoMuseumService chicagoMuseumService,
             ClevelandMuseumService clevelandMuseumService) {
         this.museumConfig = museumConfig;
+        this.artworkRepository = artworkRepository;
         this.viewRepository = viewRepository;
         this.restTemplate = restTemplate;
         this.metMuseumService = metMuseumService;
         this.chicagoMuseumService = chicagoMuseumService;
         this.clevelandMuseumService = clevelandMuseumService;
+    }
+
+    /**
+     * Get a random artwork for a user (never seen before)
+     * 1. Fetch from API
+     * 2. Ensure it exists in artworks table
+     * 3. Check if user already viewed it
+     * 4. Record view and return
+     */
+    @Transactional
+    public ArtworkDto getRandomArtworkForUser(String userId) {
+        log.info("Fetching random artwork for user: {}", userId);
+
+        // Keep trying until we find an unseen artwork
+        for (int attempt = 0; attempt < 10; attempt++) {
+            try {
+                // 1. Get random from API
+                ArtworkDto apiArtwork = getRandomArtwork();
+
+                // 2. Sync to artworks table if not exists
+                Artwork artwork = artworkRepository.findByArtworkId(apiArtwork.getArtworkId())
+                    .orElseGet(() -> {
+                        Artwork newArtwork = Artwork.builder()
+                            .artworkId(apiArtwork.getArtworkId())
+                            .title(apiArtwork.getTitle())
+                            .artist(apiArtwork.getArtist())
+                            .imageUrl(apiArtwork.getImageUrl())
+                            .museumSource(apiArtwork.getMuseumSource())
+                            .year(apiArtwork.getYear())
+                            .description(apiArtwork.getDescription())
+                            .build();
+                        return artworkRepository.save(newArtwork);
+                    });
+
+                // 3. Check if user already viewed
+                boolean viewed = viewRepository.existsByUserIdAndArtworkId(userId, artwork.getArtworkId());
+
+                if (!viewed) {
+                    // 4. Record view
+                    ArtworkView view = ArtworkView.builder()
+                        .userId(userId)
+                        .artworkId(artwork.getArtworkId())
+                        .build();
+                    viewRepository.save(view);
+
+                    log.info("Random artwork generated for user {}: {}", userId, artwork.getArtworkId());
+                    return apiArtwork;
+                }
+                // Else: already viewed, continue loop to fetch another
+            } catch (Exception e) {
+                log.warn("Attempt {} failed: {}", attempt + 1, e.getMessage());
+            }
+        }
+
+        throw new RuntimeException("Unable to find unseen artwork after multiple attempts");
     }
 
     /**
@@ -81,35 +139,9 @@ public class ArtworkService {
         }
     }
 
-    /**
-     * Record that a user viewed an artwork (asynchronous, non-blocking)
-     */
-    @Async
-    @Transactional
-    public void recordViewAsync(String userId, ViewRequest viewRequest) {
-        try {
-            ArtworkView view = new ArtworkView();
-            view.setUserId(userId);
-            view.setArtworkId(viewRequest.getArtworkId());
-            view.setTitle(viewRequest.getTitle());
-            view.setArtist(viewRequest.getArtist());
-            view.setImageUrl(viewRequest.getImageUrl());
-            view.setMuseumSource(viewRequest.getMuseumSource());
-            view.setObjectDate(viewRequest.getObjectDate());
-            view.setMedium(viewRequest.getMedium());
-            view.setDimensions(viewRequest.getDimensions());
-            view.setCreditLine(viewRequest.getCreditLine());
-
-            viewRepository.save(view);
-            log.info("Recorded view for user {} - artwork {}", userId, viewRequest.getArtworkId());
-        } catch (Exception e) {
-            log.error("Error recording view for user {}: {}", userId, e.getMessage(), e);
-            // Don't throw exception - this is async and shouldn't affect user experience
-        }
-    }
 
     /**
-     * Get viewing history for a user
+     * Get viewing history (archive) for a user
      */
     public ArtworkHistoryResponse getViewHistory(String userId, Integer limit) {
         int pageSize = limit != null && limit > 0 ? Math.min(limit, 100) : 50;
@@ -161,18 +193,21 @@ public class ArtworkService {
      * Convert entity to history item DTO
      */
     private ArtworkHistoryResponse.HistoryItem toHistoryItem(ArtworkView view) {
+        String title = view.getArtwork() != null ? view.getArtwork().getTitle() : "Unknown";
+        String artist = view.getArtwork() != null ? view.getArtwork().getArtist() : "Unknown";
+        String imageUrl = view.getArtwork() != null ? view.getArtwork().getImageUrl() : null;
+        String museumSource = view.getArtwork() != null ? view.getArtwork().getMuseumSource() : null;
+
         return ArtworkHistoryResponse.HistoryItem.builder()
                 .id(view.getId())
                 .artworkId(view.getArtworkId())
-                .title(view.getTitle())
-                .artist(view.getArtist())
-                .imageUrl(view.getImageUrl())
-                .museumSource(view.getMuseumSource())
-                .objectDate(view.getObjectDate())
-                .medium(view.getMedium())
-                .dimensions(view.getDimensions())
-                .creditLine(view.getCreditLine())
+                .title(title)
+                .artist(artist)
+                .imageUrl(imageUrl)
+                .museumSource(museumSource)
                 .viewedAt(view.getCreatedAt())
                 .build();
     }
 }
+
+
