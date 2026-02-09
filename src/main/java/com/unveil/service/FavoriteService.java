@@ -91,12 +91,6 @@ public class FavoriteService {
         log.info("Favorite removed successfully for user: {}, artwork: {}", userId, artworkId);
     }
 
-    /**
-     * Check if an artwork is favorited by a user
-     */
-    public boolean isFavorited(String userId, String artworkId) {
-        return favoriteRepository.existsByUserIdAndArtworkId(userId, artworkId);
-    }
 
     private FavoriteDto toFavoriteDto(Favorite favorite) {
         return FavoriteDto.builder()
