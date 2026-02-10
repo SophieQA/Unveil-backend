@@ -79,6 +79,7 @@ public class ArtworkService {
                             .museumSource(apiArtwork.getMuseumSource())
                             .year(apiArtwork.getYear())
                             .description(apiArtwork.getDescription())
+                            .galleryNumber(apiArtwork.getGalleryNumber())
                             .build();
                         return artworkRepository.save(newArtwork);
                     });
