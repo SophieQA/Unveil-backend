@@ -22,4 +22,5 @@ public class ArtworkArchiveDto {
     private String year;
     private String description;
     private LocalDateTime createdAt;
+    private String galleryNumber;
 }
