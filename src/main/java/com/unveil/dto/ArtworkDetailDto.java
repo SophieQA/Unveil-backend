@@ -23,4 +23,5 @@ public class ArtworkDetailDto {
     private String dimensions;
     private String creditLine;
     private LocalDateTime viewedAt;
+    private String galleryNumber;
 }
