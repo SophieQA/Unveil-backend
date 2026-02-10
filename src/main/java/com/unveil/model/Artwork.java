@@ -46,6 +46,16 @@ public class Artwork {
     @Column(length = 5000)
     private String description;
 
+    @Column(name = "gallery_number", length = 50)
+    private String galleryNumber;
+
+    @Column(name = "gallery_id")
+    private Long galleryId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "gallery_id", insertable = false, updatable = false)
+    private Gallery gallery;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

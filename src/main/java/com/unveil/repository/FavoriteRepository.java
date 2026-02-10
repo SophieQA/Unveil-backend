@@ -32,6 +32,11 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     long countByUserId(String userId);
 
     /**
+     * Get all favorites for a user
+     */
+    java.util.List<Favorite> findByUserId(String userId);
+
+    /**
      * Delete a favorite by user and artwork
      */
     void deleteByUserIdAndArtworkId(String userId, String artworkId);

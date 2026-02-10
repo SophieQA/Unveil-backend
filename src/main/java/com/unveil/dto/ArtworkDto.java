@@ -22,4 +22,5 @@ public class ArtworkDto {
     private String medium;
     private String dimensions;
     private String creditLine;
+    private String galleryNumber;
 }
