@@ -114,6 +114,7 @@ public class FavoriteService {
                     .year(favorite.getArtwork().getYear())
                     .description(favorite.getArtwork().getDescription())
                     .createdAt(favorite.getArtwork().getCreatedAt())
+                    .galleryNumber(favorite.getArtwork().getGalleryNumber())
                     .build();
         }
 
