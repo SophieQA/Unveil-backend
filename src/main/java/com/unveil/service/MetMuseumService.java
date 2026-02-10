@@ -105,6 +105,7 @@ public class MetMuseumService {
                             .medium(objectResponse.getMedium())
                             .dimensions(objectResponse.getDimensions())
                             .creditLine(objectResponse.getCreditLine())
+                            .galleryNumber(objectResponse.getGalleryNumber())
                             .build();
                 }
 
@@ -139,5 +140,7 @@ public class MetMuseumService {
         private String medium;
         private String dimensions;
         private String creditLine;
+        @JsonProperty("GalleryNumber")
+        private String galleryNumber;
     }
 }
